@@ -51,53 +51,56 @@ dverify.prototype={
 		}
 	},
 	init:function(){
-		this.dverified = new Event('dverified');
-		this.elements=new this.elements(this);
-		this.loadstage();
+		var obj=this;
+		obj.dverified = new Event('dverified');
+		obj.elements=new obj.elements(obj);
+		obj.loadstage();
+		
+		
+		obj.data={};
+		obj.domactive=false;
+		obj.timer=setInterval(function(){
+			obj.stop=true;		
+			if(!(JSON.stringify(obj.data) === JSON.stringify(obj._data))){
+				if(!obj.domactive)obj._data=obj.data;
+				setTimeout(function(){
+					obj.stop=false;
+					obj.domactive=false;
+					obj._data;
+				},10);
+			};
+		},20);
+		Object.defineProperty(obj,'_data', {
+		  get: function(){
+		  	var data={};
+		  	for(var i in this.elements){
+		  		if(i!="parent"){
+		  			data[i]={};
+			  		for(var x in this.elements[i]){
+			  			data[i][x]=this.elements[i][x].readData();
+			  		}
+		  		}
+		  	}
+		  	if(!obj.stop){
+		  		obj.data=JSON.parse(JSON.stringify(data));
+		  	}
+		  	return data;
+		  },
+		  set: function(v){
+		  	for(var i in v){
+		  		for(var x in v[i]){
+		  			obj.elements[i][x].setData(v[i][x]);
+		  		}	  		
+		  	}
+		  	return;
+		  }
+		});
+		var dverifyReady = new CustomEvent("dverifyReady",{ "detail": this});
+		//we need to wait of creating object dverify
+		setTimeout(function(){document.dispatchEvent(dverifyReady);},100);	
+		
 		this.cb(this);
 	}
 };
 
-dverify=new dverify(function(obj){
-	obj.data={};
-	obj.domactive=false;
-	obj.timer=setInterval(function(){
-		obj.stop=true;		
-		if(!(JSON.stringify(obj.data) === JSON.stringify(obj._data))){
-			if(!obj.domactive)obj._data=obj.data;
-			setTimeout(function(){
-				obj.stop=false;
-				obj.domactive=false;
-				obj._data;
-			},10);
-		};
-	},20);
-	Object.defineProperty(obj,'_data', {
-	  get: function(){
-	  	var data={};
-	  	for(var i in this.elements){
-	  		if(i!="parent"){
-	  			data[i]={};
-		  		for(var x in this.elements[i]){
-		  			data[i][x]=this.elements[i][x].readData();
-		  		}
-	  		}
-	  	}
-	  	if(!obj.stop){
-	  		obj.data=JSON.parse(JSON.stringify(data));
-	  	}
-	  	return data;
-	  },
-	  set: function(v){
-	  	for(var i in v){
-	  		for(var x in v[i]){
-	  			obj.elements[i][x].setData(v[i][x]);
-	  		}	  		
-	  	}
-	  	return;
-	  }
-	});
-	var dverifyReady = new CustomEvent("dverifyReady",{ "detail": this});
-	//we need to wait of creating object dverify
-	setTimeout(function(){document.dispatchEvent(dverifyReady);},100);	
-});
+

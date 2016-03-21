@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="dverify.js"></script>	
     <style>
     	.dverified{
     		-webkit-box-shadow: 0 0 0 3px #FF1C2B;
@@ -86,19 +87,27 @@
 		<input id="newvalue" />
 	</div>
 	<script>
+		var dveri;
+		(function() {
+		   dveri=new dverify(function(obj){
+				console.log("ready");
+		   });
+		})();
+		
+		
 		document.getElementById("read").onclick=function(){
-			document.getElementById("data").innerHTML=JSON.stringify(dverify.data);
+			document.getElementById("data").innerHTML=JSON.stringify(dveri.data);
 		};
 		NodeList.prototype.forEach = Array.prototype.forEach;
 		var pickForm=document.getElementById("pickForm");
 		var elements=document.getElementById("elements");
 		var newvalue=document.getElementById("newvalue");
 		document.addEventListener("dverifyReady", function(e){//wait till dverify is ready
-				for(var i in dverify.data){
+				for(var i in dveri.data){
 					var form=document.createElement("option");
 					form.innerHTML=i;
 					pickForm.appendChild(form);
-					for(var x in dverify.data[i]){
+					for(var x in dveri.data[i]){
 						var el=document.createElement("option");
 						el.innerHTML=x;
 						el.setAttribute("form",i);
@@ -118,7 +127,7 @@
 				pickForm.onchange();
 				
 				newvalue.onkeyup=function(){
-					dverify.data[pickForm.value][elements.value]=this.value;
+					dveri.data[pickForm.value][elements.value]=this.value;
 				};
 		});
 		
@@ -133,6 +142,5 @@
 			});
 		});
 	</script>	
-	<script src="dverify.js"></script>	
   </body>
 </html>
