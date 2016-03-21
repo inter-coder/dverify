@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    	.dverified{
+    		-webkit-box-shadow: 0 0 0 3px #FF1C2B;
+			box-shadow: 0 0 0 3px #FF1C2B;
+    	}
+    	p>label:first-child{
+    		font-weight: bold;
+    		color: red;
+    	}
+    	input[type="submit"]{
+    		padding:5px 10px;
+    	}
+    	form, #commands{
+    		border:solid 2px silver;
+    		padding:10px;
+    		margin:3px;
+    	}
+    </style>
+  </head>
+  <body>
+  	<h1>DVERIFY</h1>
+  	<p>Parse elements in JSON format and manipulate the elements by changing the values in JSON</p>
+	<form dverify-form='form1' action="">
+		<h1>FORM 1</h1>
+		<p>
+			<label>Some RADIOS</label><br />
+			<input id="id1" field="k4" type="radio" name="t1" value=1 checked /><label for="id1">Value 1</label>
+			<input id="id2" field="k4" type="radio" name="t1" value=2 /><label for="id2">Value 2</label>
+			<input id="id3" field="k4" type="radio" name="t1" value=3 /><label for="id3">Value 3</label>
+		</p>
+		<p>
+			<label>Some TEXTAREA</label><br />
+			<textarea field="text2" name="text2"></textarea>
+		</p>
+		<p>
+			<label>Some SELECT</label><br />
+			<select field="select" name="select" style="width:200px">
+				<option>1</option>
+				<option>2</option>
+				<option>3</option>
+				<option>4</option>
+			</select>
+		</p>
+		<input type="submit" value="SUBMIT" />
+	</form>
+	<form dverify-form='form2' action="">
+		<h1>FORM 2</h1>
+		<p>
+			<label>Some CHECKBOXES</label></br>
+			<input id="idc1" field="k1" type="checkbox" name="c1" checked /><label for="idc1">Value 1</label>
+			<input id="idc2" field="k2" type="checkbox" name="c2" /><label for="idc2">Value 2</label>
+			<input id="idc3" field="k3" type="checkbox" name="c3" /><label for="idc3">Value 3</label>
+		</p>
+		<p>
+			<label>Some TEXTAREA</label><br />
+			<textarea field="text2" name="text2"></textarea>
+		</p>
+		<p>
+			<label>Some SELECT</label><br />
+			<select field="select" name="select" style="width:200px">
+				<option>1</option>
+				<option>2</option>
+				<option>3</option>
+				<option>4</option>
+			</select>
+		</p>
+		<input type="submit" value="SUBMIT" />
+	</form>
+	<hr />
+	<div id="commands">
+		<input type="button" value="READ DATA" id="read" />
+		<div id="data" style="width:100%;padding:5%;"></div>
+		<hr />
+		<label>Pick form</label>
+		<select id="pickForm"></select>
+		<label>Pick element</label>
+		<select id="elements"></select>
+		<label>Set value</label>
+		<input id="newvalue" />
+	</div>
+	<script>
+		document.getElementById("read").onclick=function(){
+			document.getElementById("data").innerHTML=JSON.stringify(dverify.data);
+		};
+		NodeList.prototype.forEach = Array.prototype.forEach;
+		var pickForm=document.getElementById("pickForm");
+		var elements=document.getElementById("elements");
+		var newvalue=document.getElementById("newvalue");
+		document.addEventListener("dverifyReady", function(e){//wait till dverify is ready
+				for(var i in dverify.data){
+					var form=document.createElement("option");
+					form.innerHTML=i;
+					pickForm.appendChild(form);
+					for(var x in dverify.data[i]){
+						var el=document.createElement("option");
+						el.innerHTML=x;
+						el.setAttribute("form",i);
+						elements.appendChild(el);
+					}
+				};
+				pickForm.onchange=function(){
+					var form=this.value;
+					elements.querySelectorAll("option[form='"+form+"']").forEach(function(el) {
+					  el.style.display='block';
+					});
+					elements.querySelector("option[form='"+form+"']").selected=true;
+					elements.querySelectorAll("option:not([form='"+form+"'])").forEach(function(el) {
+					  el.style.display='none';
+					});
+				};
+				pickForm.onchange();
+				
+				newvalue.onkeyup=function(){
+					dverify.data[pickForm.value][elements.value]=this.value;
+				};
+		});
+		
+		//add event listener on all dverified elements
+		document.querySelectorAll("[field]").forEach(function(el){
+			el.addEventListener("dverified", function(){
+				var obj=this;
+				obj.classList.add("dverified");//add class
+				setTimeout(function(){//remove class
+					obj.classList.remove("dverified");
+				},2000);
+			});
+		});
+	</script>	
+	<script src="dverify.js"></script>	
+  </body>
+</html>
