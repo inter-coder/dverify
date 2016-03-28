@@ -1,105 +1,101 @@
+NodeList.prototype.forEachNode = Array.prototype.forEach;
 var dverify=function(cb){
-	this.about="";this.cb=cb;
-	this.elements=function(parent){this.parent=parent;};
+	this.about="";
+	this.cb=cb;
 	this.init();
 };
 dverify.prototype={
-	addSetGet:function(form,dom){
+	setValueMethods:function(parent,node){
 		var obj=this;
-		dom.addEventListener("keydown", function(){obj.domactive=true;});
-		dom.addEventListener("click", function(){obj.domactive=true;});
-		dom.readData=function(){
-			if(dom.type=="radio"){
-				var chek=form.querySelectorAll("[type='radio'][field='"+this.getAttribute("field")+"']:checked");
+		node.addEventListener("keydown", function(e){obj.nodeActive=e.which!=13;});
+		node.addEventListener("click", function(){obj.nodeActive=true;});
+		node.readData=function(){
+			if(node.type=="radio"){
+				var chek=parent.querySelectorAll("[type='radio'][field='"+this.getAttribute("field")+"']:checked");
 				if(chek.length>0)return chek[0].value;
-			}else if(dom.type=="checkbox"){
-				return dom.checked?1:0;
+			}else if(node.type=="checkbox"){
+				return node.checked?1:0;
 			}
 			return this.value;
 		};
-		dom.setData=function(v){			
-			if(dom.type=="radio"){
-				var el=form.querySelector("[type='radio'][field='"+this.getAttribute("field")+"'][value='"+v+"']");
+		node.setData=function(v){
+			if(node.type=="radio"){
+				var el=parent.querySelector("[type='radio'][field='"+this.getAttribute("field")+"'][value='"+v+"']");
 				if(el!=null){					
-					if(v!=dom.readData()){el.dispatchEvent(obj.dverified);}
+					if(v!=node.readData()){el.dispatchEvent(obj.dverified);}
 					el.checked=true;
 				}
-			}else if(dom.type=="checkbox"){
-				if(v!=dom.readData()){dom.dispatchEvent(obj.dverified);}
-				dom.checked=v==1?true:false;;
+			}else if(node.type=="checkbox"){
+				if(v!=node.readData()){node.dispatchEvent(obj.dverified);}
+				node.checked=v==1?true:false;;
 			}else{
-				if(v!=dom.readData()){dom.dispatchEvent(obj.dverified);}
+				if(v!=node.readData()){node.dispatchEvent(obj.dverified);}
 				this.value=v;
 			}			
-			return false;
+			return ;
 		};
 	},
 	loadstage:function(){
-		var forms=document.querySelectorAll("form[dverify-form]");
-		for(var i=0;i<forms.length;i++){
-			var elem={};	
-			var elements=forms[i].querySelectorAll("[field]");
-			for(var x=0;x<elements.length;x++){
-				if(elements[x].tagName!=null){
-					var field=elements[x].getAttribute("field");
-					if(field!=null){
-						elem[field]=elements[x];this.addSetGet(forms[i],elem[field]);
-					}					
-				}				
-			}
-			this.elements[forms[i].getAttribute("dverify-form")]=elem;
+		var obj=this;
+		obj.elements={};
+		document.querySelectorAll("[dverify-form]").forEachNode(function(node){obj.elements[node.getAttribute("dverify-form")]=node;});
+		for(var i in obj.elements){
+			var nodes=obj.elements[i].querySelectorAll("[field]");
+			var parent=obj.elements[i];obj.elements[i]={};
+			nodes.forEachNode(function(node){
+				obj.setValueMethods(parent,node);
+				obj.elements[i][node.getAttribute("field")]=node;
+			});
 		}
 	},
 	init:function(){
 		var obj=this;
-		obj.dverified = new Event('dverified');
-		obj.elements=new obj.elements(obj);
-		obj.loadstage();
-		
-		
-		obj.data={};
-		obj.domactive=false;
-		obj.timer=setInterval(function(){
-			obj.stop=true;		
-			if(!(JSON.stringify(obj.data) === JSON.stringify(obj._data))){
-				if(!obj.domactive)obj._data=obj.data;
-				setTimeout(function(){
-					obj.stop=false;
-					obj.domactive=false;
-					obj._data;
-				},10);
-			};
-		},20);
-		Object.defineProperty(obj,'_data', {
-		  get: function(){
-		  	var data={};
-		  	for(var i in this.elements){
-		  		if(i!="parent"){
-		  			data[i]={};
-			  		for(var x in this.elements[i]){
-			  			data[i][x]=this.elements[i][x].readData();
-			  		}
-		  		}
-		  	}
-		  	if(!obj.stop){
-		  		obj.data=JSON.parse(JSON.stringify(data));
-		  	}
-		  	return data;
-		  },
-		  set: function(v){
-		  	for(var i in v){
-		  		for(var x in v[i]){
-		  			obj.elements[i][x].setData(v[i][x]);
-		  		}	  		
-		  	}
-		  	return;
-		  }
+		this.nodeActive=false;
+		this.data={};
+		this.dveriReady = new Event('dverifyReady');
+		this.dverified = new Event('dverified');
+		Object.defineProperty(this,'_data', {
+			get: function(){
+				var data={};
+				for(var i in this.elements){
+					data[i]={};
+					for(var x in this.elements[i]){
+						data[i][x]=this.elements[i][x].readData();
+					}
+				}
+				if(JSON.stringify(this.data)=="{}"){
+					this.data=JSON.parse(JSON.stringify(data));
+					return data;
+				}else if(JSON.stringify(this.data)===JSON.stringify(data)){					
+					return data;
+				}else{					
+					if(!obj.nodeActive){
+						for(var i in this.data){
+							if(this.data[i]==null){
+								for(var x in this.elements[i]){		
+									this.elements[i][x].setData("");							
+								}
+							}else{
+								for(var x in this.data[i]){		
+									if(this.elements[i][x]!=undefined){
+										if(this.elements[i][x].readData()!=this.data[i][x]){
+											this.elements[i][x].setData(this.data[i][x]);
+										}
+									}							
+								}
+							}							
+						}
+						obj.nodeActive=true;						
+					}else{
+						obj.nodeActive=false;
+						this.data=JSON.parse(JSON.stringify(data));						
+					}
+				}
+			}
 		});
-		var dverifyReady = new CustomEvent("dverifyReady",{ "detail": this});
-		//we need to wait of creating object dverify
-		setTimeout(function(){document.dispatchEvent(dverifyReady);},100);	
-		
-		this.cb(this);
+		this.loadstage();
+		this.timer=setInterval(function(){obj._data;},45);	
+		setTimeout(function(){if(obj.cb!=undefined)obj.cb(obj);document.dispatchEvent(obj.dveriReady);},80);		
 	}
 };
 
