@@ -100,7 +100,7 @@ dverify.prototype={
 		this.dverified = new Event('dverified');
 		this.loadstage();
 		this.timer=setInterval(function(){obj.ciklus();},145);	
-		setTimeout(function(){if(obj.cb!=undefined)obj.cb(obj);document.dispatchEvent(obj.dveriReady);},80);	
+		setTimeout(function(){if(obj.cb!=undefined)obj.cb(obj);document.dispatchEvent(obj.dveriReady);},180);	
 	}
 };
 
